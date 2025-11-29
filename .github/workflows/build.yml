@@ -30,7 +30,7 @@ jobs:
           sudo apt-get install -y gnupg
 
       - name: Install GitHub CLI
-        uses: cli/cli@v3
+        uses: cli/cli@v2
         
       - name: Set variables
         run: |
