@@ -1,96 +1,66 @@
-name: Build geosite.dat & geoip.dat
-
+name: Build dlc.dat
 on:
   push:
     branches:
-      - main
       - master
-  workflow_dispatch:
-
+    paths-ignore:
+      - "**/README.md"
 jobs:
   build:
+    name: Build
     runs-on: ubuntu-latest
 
     steps:
       - name: Checkout codebase
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: code
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
           go-version-file: code/go.mod
           cache-dependency-path: code/go.sum
 
-      - name: Install tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y zip xz-utils
-          sudo apt-get install -y gnupg
-
-      - name: Install GitHub CLI
-        uses: cli/cli@v2
-        
       - name: Set variables
         run: |
           echo "RELEASE_NAME=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
           echo "TAG_NAME=$(date +%Y%m%d%H%M%S)" >> $GITHUB_ENV
-
-      # ---- Build geosite.dat ----
-      - name: Build geosite.dat
-        run: |
-          cd code
-          go run ./ --outputdir=../output/geosite \
-            --exportlists=category-ads-all,tld-cn,cn,tld-\!cn,geolocation-\!cn,apple,icloud
-          ls ../output/geosite
         shell: bash
 
-      # ---- Build geoip.dat (从 Loyalsoldier 方式) ----
-      - name: Clone geoip repo
+      - name: Build dlc.dat file
         run: |
-          git clone https://github.com/Loyalsoldier/geoip.git geoip-src
-          cd geoip-src
-          sudo apt-get install -y python3 python3-pip
-          pip3 install -r requirements.txt
-          ./tools/convert.py --outputdir ../output/geoip
-          ls ../output/geoip
+          cd code || exit 1
+          go run ./ --outputdir=../ --exportlists=category-ads-all,tld-cn,cn,tld-\!cn,geolocation-\!cn,apple,icloud
+          cd ../ && rm -rf code
 
-      # ---- Package all ----
-      - name: Generate checksums
+      - name: Generate dlc.dat sha256 hash
         run: |
-          cd output/geosite
-          sha256sum geosite.dat > geosite.dat.sha256sum
-          zip -9 geosite.dat.zip geosite.dat
-          sha256sum geosite.dat.zip > geosite.dat.zip.sha256sum
-          xz -z -9 -k geosite.dat
-          sha256sum geosite.dat.xz > geosite.dat.xz.sha256sum
+          sha256sum dlc.dat > dlc.dat.sha256sum
 
-          cd ../geoip
-          sha256sum geoip.dat > geoip.dat.sha256sum
-          zip -9 geoip.dat.zip geoip.dat
-          sha256sum geoip.dat.zip > geoip.dat.zip.sha256sum
-          xz -z -9 -k geoip.dat
-          sha256sum geoip.dat.xz > geoip.dat.xz.sha256sum
-
-      # ---- Release ----
-      - name: Create GitHub Release
+      - name: Generate Zip
         run: |
-          gh release create "${TAG_NAME}" \
-            --latest \
-            --title "${RELEASE_NAME}" \
-            --notes "Automated build of geosite.dat + geoip.dat" \
-            ./output/geosite/geosite.dat \
-            ./output/geosite/geosite.dat.sha256sum \
-            ./output/geosite/geosite.dat.zip \
-            ./output/geosite/geosite.dat.zip.sha256sum \
-            ./output/geosite/geosite.dat.xz \
-            ./output/geosite/geosite.dat.xz.sha256sum \
-            ./output/geoip/geoip.dat \
-            ./output/geoip/geoip.dat.sha256sum \
-            ./output/geoip/geoip.dat.zip \
-            ./output/geoip/geoip.dat.zip.sha256sum \
-            ./output/geoip/geoip.dat.xz \
-            ./output/geoip/geoip.dat.xz.sha256sum
+          zip -9 dlc.dat.zip dlc.dat
+          sha256sum dlc.dat.zip > dlc.dat.zip.sha256sum
+
+      - name: Generate XZ
+        run: |
+          xz -z -9 -k dlc.dat
+          sha256sum dlc.dat.xz > dlc.dat.xz.sha256sum
+
+      - name: Git push assets to "release" branch
+        run: |
+          git init
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b release
+          git add *.txt *.sha256sum dlc.dat dlc.dat.zip dlc.dat.xz
+          git commit -m "${{ env.RELEASE_NAME }}"
+          git remote add origin "https://${{ github.actor }}:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}"
+          git push -f -u origin release
+
+      - name: Release and upload assets
+        run: |
+          gh release create ${{ env.TAG_NAME }} --generate-notes --latest --title ${{ env.RELEASE_NAME }} ./dlc.dat ./dlc.dat.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
