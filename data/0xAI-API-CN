@@ -1,0 +1,50 @@
+# 国内常用 AI 模型 / OpenAI 兼容 API 域名
+
+# Aliyun DashScope / 通义千问
+domain:dashscope.aliyuncs.com
+domain:dashscope-intl.aliyuncs.com
+
+# Baidu Qianfan / 文心一言
+domain:qianfan.baidubce.com
+domain:aistudio.baidu.com
+# 如需要 Web 入口
+domain:yiyan.baidu.com
+
+# Zhipu AI / GLM
+domain:open.bigmodel.cn
+
+# Tencent Hunyuan / LKE
+domain:api.hunyuan.cloud.tencent.com
+domain:api.lkeap.tencentcloud.com
+
+# ByteDance 火山方舟 / 豆包
+domain:ark.cn-beijing.volces.com
+domain:ark.cn-beijing.volcengineapi.com
+
+# iFlytek Spark
+domain:spark-api.xf-yun.com
+
+# Baichuan
+domain:api.baichuan-ai.com
+
+# MiniMax
+domain:api.minimax.io
+domain:api.minimaxi.com
+
+# Moonshot / Kimi
+domain:api.moonshot.cn
+domain:api.moonshot.ai
+
+# DeepSeek 官方
+domain:api.deepseek.com
+
+# SiliconFlow
+domain:api.siliconflow.cn
+domain:api-st.siliconflow.cn
+domain:api.siliconflow.com
+
+# 零一万物 Yi
+domain:api.lingyiwanwu.com
+
+# 302.AI （聚合平台，可选）
+domain:api.302.ai
